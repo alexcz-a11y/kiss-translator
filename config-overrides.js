@@ -313,6 +313,15 @@ const userscriptWebpack = (config, env) => {
   config.optimization.splitChunks = { cacheGroups: { default: false } };
   config.optimization.runtimeChunk = false;
   config.optimization.minimize = env === "production";
+  // 油猴脚本注入任意网页运行，懒加载 chunk 会按当前页面的 origin 请求而失败（ChunkLoadError）。
+  // 多入口共享的异步 chunk 无法被 LimitChunkCountPlugin 合并，因此把动态 import() 内联进各入口。
+  config.module.parser = {
+    ...config.module.parser,
+    javascript: {
+      ...config.module.parser?.javascript,
+      dynamicImportMode: "eager",
+    },
+  };
 
   // 生产环境压缩时，利用 Terser 插件排除普通注释，强化双轮死代码消除与调试剥离，文件顶部注入油猴 Meta Banner
   if (config.optimization.minimize) {
